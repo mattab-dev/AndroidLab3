@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -45,15 +46,17 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog,int id) {
                                 // Kliknięto tak
                                 // @TODO Reset ustawień
-
+                                pref.edit().clear().commit();
                                 // @TODO Wyświetlenie Toast z informacją
+                                Toast.makeText(MainActivity.this, "Settings cleared", Toast.LENGTH_SHORT).show();
+                                showPrefs();
                             }
                         })
                         .setNegativeButton("Nie",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
                                 // Kliknięto nie
                                 // @TODO Wyświetlenie Toast z informacją
-
+                                Toast.makeText(MainActivity.this, "Settings remain unchanged", Toast.LENGTH_SHORT).show();
                                 dialog.cancel();
                             }
                         });
@@ -85,6 +88,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // @TODO Wyświetlanie przycisku kierującego do profilu Twitter, o ile taki został ustawiony
+        Boolean twitter_on = pref.getBoolean("twitter_on", false);
+        TextView twitterLink = findViewById(R.id.dane_twitter);
+
+        if(twitter_on && !pref.getString("twitter_link", "").isEmpty()) {
+            twitterLink.setText("Twój link do profilu Twitter to: " + pref.getString("twitter_link", "brak"));
+            twitterLink.setMovementMethod(LinkMovementMethod.getInstance());
+        } else if(twitter_on && pref.getString("twitter_link", "").isEmpty()) {
+            twitterLink.setText("Twitter włączony, link do profilu niedostępny");
+        }else {
+                twitterLink.setText("Twitter wyłączony");
+            }
     }
 
     @Override

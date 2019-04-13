@@ -3,6 +3,7 @@ package pl.edu.pwr.wiz.wzorlaboratorium3;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -17,11 +18,15 @@ import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -49,16 +54,44 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             } else if (preference instanceof EditTextPreference) {
                 EditTextPreference editTextPreference = (EditTextPreference) preference;
-                EditText editText = editTextPreference.getEditText();
+                final EditText editText = editTextPreference.getEditText();
+                TextWatcher validator = new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-                if( editText.getInputType() == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD) ) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        String passwordRegexp = "^[a-zA-Z0-9]*$";
+                        if (!s.toString().matches(passwordRegexp)) {
+                            editText.setError("wrong password format");
+                        }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+
+                    }
+
+                };
+                //  editTextPreference.getDialog()
+
+                if (editText.getInputType() == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
                     /* Zastępujemy string przez gwiazdki */
+
                     stringValue = stringValue.replaceAll(".", "*");
                 }
 
+                // email validation
+                if (editText.getInputType() == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS + 1) {
+                    String emailRegexp = "^[a-zA-Z0-9._%]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+                    if (!stringValue.matches(emailRegexp)) {
+                        return false;
+                    }
+                }
                 preference.setSummary(stringValue);
-            }
-            else {
+            } else {
                 // Dla pozostalych opcji wyświetlamy tekst
                 preference.setSummary(stringValue);
             }
@@ -132,7 +165,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || FacebookPreferenceFragment.class.getName().equals(fragmentName);
+                || FacebookPreferenceFragment.class.getName().equals(fragmentName)
+                || TwitterPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -145,6 +179,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
+
 
             // Podpinamy EditTextPreference oraz ListPreference pod nasz listener
             bindPreferenceSummaryToValue(findPreference("name"));
@@ -190,6 +225,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     // @TODO Nowy fragment do obsługi Twittera
+    public static class TwitterPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_twitter);
+            setHasOptionsMenu(true);
+
+            bindPreferenceSummaryToValue(findPreference("twitter_login"));
+            bindPreferenceSummaryToValue(findPreference("twitter_pass"));
+            bindPreferenceSummaryToValue(findPreference("twitter_link"));
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
